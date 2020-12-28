@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="LogcatView" />
+
+    <Button
+        android:id="@+id/btnLogcat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LogcatView demo"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/btnLogcatTag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LogcatTagView demo"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/btnLogcatDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LogcatTagView dialog demo"
+        android:textAllCaps="false" />
+
+</LinearLayout>

@@ -1,0 +1,3 @@
+include ':LogcatView'
+include ':app'
+rootProject.name = "LogcatView"
