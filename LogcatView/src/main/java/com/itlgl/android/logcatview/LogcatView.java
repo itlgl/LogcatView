@@ -1,6 +1,7 @@
 package com.itlgl.android.logcatview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -23,10 +24,43 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
 /**
- * 将logcat的日志输出到TextView的工具，可以直接在手机上查看log
+ * 将logcat的日志输出到TextView的工具View，可以直接在手机上查看log
  *
- * 写完测试发现一个头疼的问题，当滑动LogcatView内的ScrollView时，系统会打出onTouchEvent的一堆日志，导致控件易用性很差
- * 所以稍微修改了一下后提供了另外一个LogcatTagView，仅显示指定Tag("LogcatView")的内容，剔除无用日志
+ * <pre>
+ * 1.在布局文件中，直接引用此view即可使用
+ * <pre>
+ * &lt;com.itlgl.android.logcatview.LogcatView
+ *     android:layout_width="match_parent"
+ *     android:layout_height="match_parent" &gt;
+ * </pre>
+ * <br></br>默认情况下logcat的语句为：logcat *:V --pid xx -v time
+ * <br></br>在有的手机上，滑动ScrollView会产生系统log，这就导致只要一滑动，就产生log，自己的log不好找，可以通过过滤自定义tag的方式避免
+ * <br></br><br></br><br></br>
+ * 2.支持自定义过滤tag
+ * <pre>
+ * &lt;com.itlgl.android.logcatview.LogcatView
+ *     android:layout_width="match_parent"
+ *     android:layout_height="match_parent"
+ *     app:filterTags="tag1,tag2,tag3" &gt;
+ * </pre>
+ * <br></br>过滤tag最后组装的cmd语句是这样：logcat tag1:V tag2:V tag3:V *:S --pid xx -v time
+ * <br></br>这时
+ * <br></br><br></br><br></br>
+ * 3.支持自定义logcat语句
+ * <pre>
+ * &lt;com.itlgl.android.logcatview.LogcatView
+ *     android:layout_width="match_parent"
+ *     android:layout_height="match_parent"
+ *     app:customCmd="logcat -v time" &gt;
+ * </pre>
+ * <br></br>自定义logcat语句，请在cmd最后加上 -v time的格式，否则代码不能正确判断每一条log的优先级，导致log显示的颜色不正确
+ * <br></br><br></br><br></br>
+ * 4. 优先级问题
+ * <br></br>customCmd > filterTags > default
+ * <br></br>当customCmd不为空时，filterTags不起作用，默认cmd不起作用
+ * <br></br>当customCmd为空时，filterTags才能起作用
+ * <br></br>只有customCmd和filterTags都为空时，默认的cmd才会起作用
+ *
  */
 public class LogcatView extends FrameLayout {
     private static final String[] LEVEL_STRING = new String[]{"V", "D", "I", "W", "E"};
@@ -72,6 +106,8 @@ public class LogcatView extends FrameLayout {
     };
     private String[] logcatColor = LEVEL_LOG_COLOR_CLASSIC;
     private int spinnerSelectedPositionBefore = 0;
+    private String filterTags = null;
+    private String customCmd = null;
 
     private Process logcatProcess = null;
 
@@ -83,6 +119,19 @@ public class LogcatView extends FrameLayout {
 
     public LogcatView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.LogcatView);
+        filterTags = ta.getString(R.styleable.LogcatView_filterTags);
+        customCmd = ta.getString(R.styleable.LogcatView_customCmd);
+        ta.recycle();
+
+        init();
+    }
+
+    public LogcatView(Context context, @Nullable String filterTags, @Nullable String customCmd) {
+        super(context);
+        this.filterTags = filterTags;
+        this.customCmd = customCmd;
         init();
     }
 
@@ -132,13 +181,15 @@ public class LogcatView extends FrameLayout {
             logcatProcess = null;
         }
         tvLog.setText("");
+
         String cmd = null;
-        String[] customFilterTags = customFilterTags();
         int pid = android.os.Process.myPid();
         String level = LEVEL_STRING[spinner.getSelectedItemPosition()];
-        if(customFilterTags == null) {
-            cmd = String.format("logcat *:%s --pid %s -v time", level, pid);
-        } else {
+        // 首先判断是否有自定义cmd，优先级最高
+        if(!TextUtils.isEmpty(customCmd)) {
+            cmd = customCmd;
+        } else if(!TextUtils.isEmpty(filterTags)) { // 其次判断是否有自定义过滤tag
+            String[] customFilterTags = filterTags.split(",");
             // adb logcat ActivityManager:I MyApp:D *:S
             // 最后缀上*:S可以使除指定tag外的所有log都被过滤掉
             StringBuilder cmdBuilder = new StringBuilder();
@@ -148,7 +199,10 @@ public class LogcatView extends FrameLayout {
             }
             cmdBuilder.append(" *:S --pid ").append(pid).append(" -v time");
             cmd = cmdBuilder.toString();
+        } else {// 最后才是默认情况
+            cmd = String.format("logcat *:%s --pid %s -v time", level, pid);
         }
+
         try {
             logcatProcess = Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
@@ -161,10 +215,6 @@ public class LogcatView extends FrameLayout {
             return;
         }
         new Thread(logReadRunnable).start();
-    }
-
-    public String[] customFilterTags() {
-        return null;
     }
 
     public void clearLogcat() {

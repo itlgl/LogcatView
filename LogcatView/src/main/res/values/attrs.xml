@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="LogcatView">
+        <attr name="filterTags" format="string" />
+        <attr name="customCmd" format="string" />
+    </declare-styleable>
+</resources>

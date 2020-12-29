@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.itlgl.android.logcatview.LogcatTagView
+import com.itlgl.android.logcatview.LogcatView
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -17,16 +17,19 @@ class MainActivity : AppCompatActivity() {
     private fun initView() {
         setSupportActionBar(toolbar)
 
-        btnLogcat.setOnClickListener {
+        btnDefault.setOnClickListener {
             startActivity(Intent(this, LogcatActivity::class.java))
         }
-        btnLogcatTag.setOnClickListener {
-            startActivity(Intent(this, LogcatTagViewActivity::class.java))
+        btnFilterTag.setOnClickListener {
+            startActivity(Intent(this, LogcatFilterTagsActivity::class.java))
         }
-        btnLogcatDialog.setOnClickListener {
+        btnCustomCmd.setOnClickListener {
+            startActivity(Intent(this, LogcatCustomCmdActivity::class.java))
+        }
+        btnDialog.setOnClickListener {
             AlertDialog.Builder(this)
-                .setTitle("LogcatTagView dialog demo")
-                .setView(LogcatTagView(this))
+                .setTitle("dialog demo")
+                .setView(LogcatView(this, "L", null))
                 .setPositiveButton("OK", null)
                 .show()
         }

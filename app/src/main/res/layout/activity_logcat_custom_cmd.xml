@@ -11,7 +11,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="LogcatView filterTags Demo" />
+        app:title="LogcatView customCmd Demo" />
 
     <Button
         android:id="@+id/btnAddLog"
@@ -22,5 +22,5 @@
     <com.itlgl.android.logcatview.LogcatView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:filterTags="L"/>
+        app:customCmd="logcat System.out:V *:S -v time"/>
 </LinearLayout>

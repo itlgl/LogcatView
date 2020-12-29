@@ -14,24 +14,31 @@
         app:title="LogcatView" />
 
     <Button
-        android:id="@+id/btnLogcat"
+        android:id="@+id/btnDefault"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="LogcatView demo"
+        android:text="default demo"
         android:textAllCaps="false" />
 
     <Button
-        android:id="@+id/btnLogcatTag"
+        android:id="@+id/btnFilterTag"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="LogcatTagView demo"
+        android:text="filter tag demo"
         android:textAllCaps="false" />
 
     <Button
-        android:id="@+id/btnLogcatDialog"
+        android:id="@+id/btnCustomCmd"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="LogcatTagView dialog demo"
+        android:text="custom cmd demo"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/btnDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="filter tag dialog demo"
         android:textAllCaps="false" />
 
 </LinearLayout>
