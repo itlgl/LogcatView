@@ -13,6 +13,12 @@
         android:layout_height="wrap_content"
         app:title="LogcatView Demo" />
 
+    <Button
+        android:id="@+id/btnAddLog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="添加异常log" />
+
     <com.itlgl.android.logcatview.LogcatView
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

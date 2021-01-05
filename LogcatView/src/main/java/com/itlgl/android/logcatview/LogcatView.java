@@ -2,11 +2,15 @@ package com.itlgl.android.logcatview;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AdapterView;
@@ -64,8 +68,8 @@ import java.nio.charset.Charset;
  */
 public class LogcatView extends FrameLayout {
     private static final String[] LEVEL_STRING = new String[]{"V", "D", "I", "W", "E"};
-    private static final String[] LEVEL_LOG_COLOR_CLASSIC = new String[]{"BBBBBB", "0070BB", "48BB31", "BBBB23", "FF0006"};
-    private static final String[] LEVEL_LOG_COLOR_INTELLIJ = new String[]{"000000", "000000", "000000", "00007F", "7F0000"};
+    private static final int[] LEVEL_LOG_COLOR_CLASSIC = new int[]{0xFFBBBBBB, 0xFF0070BB, 0xFF48BB31, 0xFFBBBB23, 0xFFFF0006};
+    private static final int[] LEVEL_LOG_COLOR_INTELLIJ = new int[]{0x000000, 0x000000, 0x000000, 0x00007F, 0x7F0000};
 
     private View btnAutoScroll;
     private View btnClearLog;
@@ -104,7 +108,7 @@ public class LogcatView extends FrameLayout {
             }
         }
     };
-    private String[] logcatColor = LEVEL_LOG_COLOR_CLASSIC;
+    private int[] logcatColor = LEVEL_LOG_COLOR_CLASSIC;
     private int spinnerSelectedPositionBefore = 0;
     private String filterTags = null;
     private String customCmd = null;
@@ -243,7 +247,7 @@ public class LogcatView extends FrameLayout {
         }
         tvLog.append("\n");
 
-        String color = logcatColor[0];
+        int color = logcatColor[0];
         // 12-28 14:26:07.283 W/InputMethodManager( 4662): startInputReason = 1
         if (log.length() >= 20) {
             switch (log.charAt(19)) {
@@ -264,8 +268,15 @@ public class LogcatView extends FrameLayout {
                     break;
             }
         }
-        String html = String.format("<font color=\"#%s\">%s</font>", color, log);
-        tvLog.append(Html.fromHtml(html));
+
+        //String html = String.format("<font color=\"#%s\">%s</font>", color, log);
+        //tvLog.append(Html.fromHtml(html));
+
+        // 如果log内有\t制表符，带颜色以后textView会崩溃
+        log = log.replaceAll("\t", "    ");
+        SpannableString ss = new SpannableString(log);
+        ss.setSpan(new ForegroundColorSpan(color), 0, ss.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        tvLog.append(ss);
 
         if (autoScroll) {
             scrollView.post(autoScrollRunnable);

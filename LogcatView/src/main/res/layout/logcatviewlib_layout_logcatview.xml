@@ -71,6 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
+            android:textIsSelectable="true"
             android:textSize="15sp"
             tools:text="log123\nlog123\nlog123\nlog123\nlog123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789-123456789" />
     </ScrollView>
