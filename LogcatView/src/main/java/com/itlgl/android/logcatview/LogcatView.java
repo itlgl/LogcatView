@@ -6,10 +6,10 @@ import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.view.View;
@@ -103,8 +103,18 @@ public class LogcatView extends FrameLayout {
                 while ((line = bufferedReader.readLine()) != null) {
                     logAppendHandler.obtainMessage(1, line).sendToTarget();
                 }
+                logAppendHandler.post(() -> {
+                    appendErrorText("Logcat process exit!");
+                });
             } catch (Exception e) {
                 // e.printStackTrace();
+
+                // 理想情况是logcat -c执行后，如果进程EOF读不出来数据，那么终止，并且显示错误信息
+                // 实际情况是bufferedReader.readLine()依然在阻塞状态
+                // 等到重新调用initLogcatCmd方法时，这里才收到一个被打断的异常，不是想要的结果
+//                logAppendHandler.post(() -> {
+//                    appendErrorText("Logcat process read error: " + (e != null ? e.getMessage() : "unknown"));
+//                });
             }
         }
     };
@@ -180,7 +190,27 @@ public class LogcatView extends FrameLayout {
     }
 
     private synchronized void initLogcatCmd() {
+        if(isInEditMode()) {
+            appendLogcatText("log will show here...");
+            return;
+        }
+
         if (logcatProcess != null) {
+            try {
+                logcatProcess.getInputStream().close();
+            } catch (Exception e) {
+                //e.printStackTrace();
+            }
+            try {
+                logcatProcess.getErrorStream().close();
+            } catch (Exception e) {
+                //e.printStackTrace();
+            }
+            try {
+                logcatProcess.getOutputStream().close();
+            } catch (Exception e) {
+                //e.printStackTrace();
+            }
             logcatProcess.destroy();
             logcatProcess = null;
         }
@@ -226,16 +256,34 @@ public class LogcatView extends FrameLayout {
         new Thread() {
             @Override
             public void run() {
-                try {
-                    Process exec = Runtime.getRuntime().exec("logcat -c");
-                    exec.waitFor();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                int exit = -1;
+                // 在特定设备上，执行logcat -c会报错"failed to clear the 'main' log"，并返回错误码1
+                // 并且在执行完后，其他logcat的process会被中断，所以中断后需要在log上提示一下
+                // 所以多执行几次，就会把log清除完成
+                for (int i = 0; i < 5; i++) {
+                    try {
+//                    ProcessBuilder processBuilder = new ProcessBuilder("logcat", "-c");
+//                    Process exec = processBuilder.start();
+                        Process exec = Runtime.getRuntime().exec("logcat -c");
+                        exit = exec.waitFor();
+                    } catch (Exception e) {
+                        //e.printStackTrace();
+                        exit = -1;
+                    }
+
+                    if(exit == 0) {
+                        break;
+                    }
                 }
 
+                final int finalExit = exit;
                 logAppendHandler.post(() -> {
-                    tvLog.setText("");
                     btnClearLog.setEnabled(true);
+                    if(finalExit == 0) {
+                        tvLog.setText("");
+                    } else {
+                        tvLog.append("\ncan not clear log,error=" + finalExit);
+                    }
                 });
             }
         }.start();
@@ -269,13 +317,25 @@ public class LogcatView extends FrameLayout {
             }
         }
 
-        //String html = String.format("<font color=\"#%s\">%s</font>", color, log);
-        //tvLog.append(Html.fromHtml(html));
-
+        // 不使用Html.fromHtml(html)的方法，因为当文字中含有特定字符（比如 "->"）时，会导致后面内容不显示
         // 如果log内有\t制表符，带颜色以后textView会崩溃
         log = log.replaceAll("\t", "    ");
         SpannableString ss = new SpannableString(log);
-        ss.setSpan(new ForegroundColorSpan(color), 0, ss.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        ss.setSpan(new ForegroundColorSpan(color), 0, ss.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        tvLog.append(ss);
+
+        if (autoScroll) {
+            scrollView.post(autoScrollRunnable);
+        }
+    }
+
+    private void appendErrorText(String error) {
+        tvLog.append("\n");
+
+        error = error.replaceAll("\t", "    ");
+        SpannableString ss = new SpannableString(error);
+        ss.setSpan(new ForegroundColorSpan(Color.BLACK), 0, ss.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss.setSpan(new BackgroundColorSpan(Color.RED), 0, ss.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         tvLog.append(ss);
 
         if (autoScroll) {

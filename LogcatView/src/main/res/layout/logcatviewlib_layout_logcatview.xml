@@ -54,7 +54,8 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_gravity="center"
-                android:background="@drawable/logcatviewlib_ic_delete" />
+                android:background="@drawable/logcatviewlib_s_delete"
+                android:duplicateParentState="true" />
         </FrameLayout>
     </RelativeLayout>
 
